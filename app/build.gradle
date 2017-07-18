@@ -2,12 +2,6 @@ apply plugin: 'com.android.application'
 
 android {
     signingConfigs {
-        qidizi {
-            keyAlias 'qidizi'
-            keyPassword 'qidizi'
-            storeFile file('/home/qidizi/Desktop/qidizi.android')
-            storePassword 'qidizi'
-        }
     }
     compileSdkVersion 25
     buildToolsVersion "25.0.2"
@@ -20,9 +14,7 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
-        debug {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        release {
         }
     }
 }
