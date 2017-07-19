@@ -1,18 +1,13 @@
 package qidizi.ime;
 
-import android.app.Activity;
-import android.content.Context;
-import android.graphics.Canvas;
-import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.Rect;
-import android.graphics.Typeface;
-import android.os.DeadObjectException;
-import android.util.DisplayMetrics;
-import android.view.MotionEvent;
-import android.view.View;
+import android.content.*;
+import android.graphics.*;
+import android.util.*;
+import android.view.*;
+import android.view.GestureDetector.*;
+import android.view.View.*;
 
-public class KeyBoradView extends View  {
+public class KeyBoradView extends View   implements OnTouchListener{
 	/**
 	 * 计算得到的单键连长
 	 */
@@ -33,7 +28,8 @@ public class KeyBoradView extends View  {
 	 * 边上的字textsize
 	 */
 	private static int sideFontSize = 0;
-
+    
+    private GestureDetector mGestureDetector;
 	/**
 	 * 字
 	 * @param context
@@ -41,10 +37,26 @@ public class KeyBoradView extends View  {
 
 	public KeyBoradView(Context context) {
 		super(context);
-		this.setBackgroundColor(Color.BLACK);
+        init(context);
 	}
 
-
+	public KeyBoradView(Context context, AttributeSet attrs) {
+		super(context,attrs);
+        init(context);
+	}
+	
+	public KeyBoradView(Context context, AttributeSet attrs, int defStyleAttr){
+		super(context,attrs,defStyleAttr);
+        init(context);
+	}
+    
+    private void init(Context context){
+        this.setOnTouchListener(this);   
+        this.setFocusable(true);   
+        this.setClickable(true);   
+        this.setLongClickable(true);   
+        mGestureDetector = new GestureDetector(new MySimpleGesture());   
+    }
 	/**
 	 * 自定义view大小
 	 * @param widthMeasureSpec
@@ -66,6 +78,8 @@ public class KeyBoradView extends View  {
 	 */
 	@Override
 	protected void onDraw(Canvas canvas) {
+
+		this.setBackgroundColor(Color.BLACK);
 		// 抗锯齿
 		Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
 		paint.setColor(Color.LTGRAY);
@@ -82,12 +96,9 @@ public class KeyBoradView extends View  {
 			canvas.drawLine(0,i * keySize,width,i * keySize,paint);
 		}
 
-        paint.setColor(Color.RED);
-        canvas.drawRect(5,2,100,100,paint);
 		// 画字,x->为正；y↓为正；view的左上角为（0，0）
 
 		// 每键4角 + 4边 + 1中间 = 9字
-		int sum = cells * rows * 9;
 		String str =  "0";
 		paint.setTypeface(Typeface.MONOSPACE);
 		// drawtext的x指字中心离原点距离，y却是指字底边到原点距离（并非中心）
@@ -96,7 +107,7 @@ public class KeyBoradView extends View  {
 		paint.setTypeface(typeface);
 		paint.setColor(Color.WHITE);
         // 字中心点大概到y点，大概是0.4个字高
-        double x = 0,y = 0, baseLine = 0.4;
+        double x = 0,y = 0, baseLine = 0.3;
 
 		for (int row = 1; row <= rows; row++) {
 			for (int cell = 1; cell <= cells; cell++) {
@@ -104,6 +115,7 @@ public class KeyBoradView extends View  {
 					// 键字顺序为左角，上边，右角，右边，右下角，下边，左下角，中间
 					str = "" + i;
                     paint.setTextSize(sideFontSize);
+					paint.setColor(Color.GRAY);
 
 					switch (i){
 						case 1:
@@ -113,7 +125,7 @@ public class KeyBoradView extends View  {
 							y = keySize * (row -1) + sideFontSize * (0.5 + baseLine);
 							break;
 						case 2:
-                            x = keySize * (cell - 1 + 0.5) + sideFontSize * 0.5;
+                            x = keySize * (cell - 1 + 0.5);
                             // y，中心点下移半个字高
                             y = keySize * (row -1) + sideFontSize * (0.5 + baseLine);
 							break;
@@ -124,26 +136,27 @@ public class KeyBoradView extends View  {
 							break;
 						case 4:
                             x = keySize * cell - sideFontSize * 0.5;
-                            y = keySize * (row -1 + 0.5);
+                            y = keySize * (row -1 + 0.5) + sideFontSize * baseLine;
 							break;
 						case 5:
                             x = keySize * cell - sideFontSize * 0.5;
-							y = keySize * row - sideFontSize * 05;
+							y = keySize * row - sideFontSize * baseLine;
 							break;
 						case 6:
-                            x = keySize * (cell - 1 + 0.5) + sideFontSize * 0.5;
-                            y = keySize * row - sideFontSize * 05;
+                            x = keySize * (cell - 1 + 0.5);
+                            y = keySize * row - sideFontSize * baseLine;
 							break;
 						case 7:
                             x = keySize * (cell - 1) + sideFontSize * 0.5;
-                            y = keySize * row - sideFontSize * 05;
+                            y = keySize * row - sideFontSize * baseLine;
 							break;
 						case 8:
                             x = keySize * (cell - 1) + sideFontSize * 0.5;
-                            y = keySize * (row -1 + 0.5);
+                            y = keySize * (row -1 + 0.5) + sideFontSize * baseLine;
 							break;
 						case 9:
 						    // 中间那个字
+							paint.setColor(Color.WHITE);
                             paint.setTextSize(centerFontSize);
                             // 半个键
 							x = keySize * (cell - 1 + 0.5);
@@ -170,7 +183,7 @@ public class KeyBoradView extends View  {
 					}
 
 					// x在笔刷初始时已经设定成中心为0点;
-					canvas.drawText(str, (float)x, (float)y, paint);
+					canvas.drawText(str, (float)x, (float)y + 3, paint);
 				}
 			}
 		}
@@ -242,19 +255,76 @@ public class KeyBoradView extends View  {
 	 * @param event
 	 * @return
 	 */
-	@Override
-	public boolean onTouchEvent(MotionEvent event) {
-		if (1 != event.getPointerCount()) {
-			// 多个手指，当做手势处理
-			return true;
-		}
+    public boolean onTouch(View v, MotionEvent event) {   
+        if (event.getAction() == MotionEvent.ACTION_UP) {   
+            Log.i("MyGesture", "MotionEvent.ACTION_UP");   
+        }   
+        return mGestureDetector.onTouchEvent(event);   
+    }   
 
-		String str = "key:" + MotionEvent.actionToString(event.getAction());
-		str += " (" + event.getX() + "," + event.getY() + ")";
-		//str += " " + 	TextUtils.join(",",char5);
-		Debug.show(str);
-		return true;
-	}
+    // SimpleOnGestureListener implements GestureDetector.OnDoubleTapListener, GestureDetector.OnGestureListener   
+    private class MySimpleGesture extends SimpleOnGestureListener {   
+        // 双击的第二下Touch down时触发    
+        public boolean onDoubleTap(MotionEvent e) {   
+            Log.i("MyGesture", "onDoubleTap");   
+            return super.onDoubleTap(e);   
+        }   
 
+        // 双击的第二下Touch down和up都会触发，可用e.getAction()区分   
+        public boolean onDoubleTapEvent(MotionEvent e) {   
+            Log.i("MyGesture", "onDoubleTapEvent");   
+            return super.onDoubleTapEvent(e);   
+        }   
+
+        // Touch down时触发    
+        public boolean onDown(MotionEvent e) {   
+            Log.i("MyGesture", "onDown");   
+            return super.onDown(e);   
+        }   
+
+        // Touch了滑动一点距离后，up时触发   
+        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {   
+            Log.i("MyGesture", "onFling");   
+            return super.onFling(e1, e2, velocityX, velocityY);   
+        }   
+
+        // Touch了不移动一直Touch down时触发   
+        public void onLongPress(MotionEvent e) {   
+            Log.i("MyGesture", "onLongPress");   
+            super.onLongPress(e);   
+        }   
+
+        // Touch了滑动时触发   
+        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {   
+            Log.i("MyGesture", "onScroll");   
+            return super.onScroll(e1, e2, distanceX, distanceY);   
+        }   
+
+        /*  
+         * Touch了还没有滑动时触发  
+         * (1)onDown只要Touch Down一定立刻触发  
+         * (2)Touch Down后过一会没有滑动先触发onShowPress再触发onLongPress  
+         * So: Touch Down后一直不滑动，onDown -> onShowPress -> onLongPress这个顺序触发。  
+         */  
+        public void onShowPress(MotionEvent e) {   
+            Log.i("MyGesture", "onShowPress");   
+            super.onShowPress(e);   
+        }   
+
+        /*  
+         * 两个函数都是在Touch Down后又没有滑动(onScroll)，又没有长按(onLongPress)，然后Touch Up时触发  
+         * 点击一下非常快的(不滑动)Touch Up: onDown->onSingleTapUp->onSingleTapConfirmed  
+         * 点击一下稍微慢点的(不滑动)Touch Up: onDown->onShowPress->onSingleTapUp->onSingleTapConfirmed   
+         */    
+        public boolean onSingleTapConfirmed(MotionEvent e) {   
+            Log.i("MyGesture", "onSingleTapConfirmed");   
+            return super.onSingleTapConfirmed(e);   
+        }   
+        public boolean onSingleTapUp(MotionEvent e) {   
+            Log.i("MyGesture", "onSingleTapUp");   
+            return super.onSingleTapUp(e);   
+        }   
+    }   
+    
 
 }
