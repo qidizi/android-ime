@@ -54,6 +54,7 @@ public class KeyBoradView extends View implements View.OnTouchListener,GestureDe
         this.setClickable(true);   
         this.setLongClickable(true);
         myGestureDetector = new GestureDetector(context, this);
+        this.setOnTouchListener(this);
     }
 	/**
 	 * 自定义view大小
@@ -251,12 +252,13 @@ public class KeyBoradView extends View implements View.OnTouchListener,GestureDe
 
 	private  void tip(String str) {
 		TextView tv = (TextView)this.getRootView().findViewById(R.id.textView);
-		tv.append("\n" + str);
+		tv.b("\n" + str);
 	}
 
 	@Override
 	public boolean onTouch(View v, MotionEvent event) {
-		tip("onTouchEvent " + MotionEvent.actionToString(event.getAction()));
+		tip("onTouch " + MotionEvent.actionToString(event.getAction()));
+        //return true;
 		return myGestureDetector.onTouchEvent(event);
 	}
 
