@@ -3,16 +3,4 @@
     android:title="@string/settings_name" > 
         <EditTextPreference
                 android:key="edit_preference" android:layout="@layout/input_test"/>
-        <!-- 想控制preferencescreen的样式比较麻烦,此类无法继承 -->
-<PreferenceScreen
-            android:key="second_preferencescreen"
-            android:title="@string/aboutIME">
-    <CheckBoxPreference
-        android:disableDependentsState="true"
-                android:key="about_preference" android:layout="@layout/about"/>
-    
-    
-  
-    
-    </PreferenceScreen>
 </PreferenceScreen>

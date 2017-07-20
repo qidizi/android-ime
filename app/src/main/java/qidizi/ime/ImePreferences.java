@@ -5,6 +5,10 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
+import android.view.View;
+import android.widget.TextView;
+
+import org.w3c.dom.Text;
 
 /**
  * Displays the IME preferences inside the input method setting.
@@ -50,5 +54,12 @@ public class ImePreferences extends PreferenceActivity {
             //append自定义配置项目
             addPreferencesFromResource(R.xml.ime_preferences);
         }
+    }
+
+
+    public boolean clear(View view) {
+        TextView tv = (TextView)view;
+        tv.setText("kkkkkkkkkkkkkkkkkkkkkk");
+        return  true;
     }
 }

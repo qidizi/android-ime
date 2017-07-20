@@ -4,8 +4,6 @@ import android.content.*;
 import android.graphics.*;
 import android.util.*;
 import android.view.*;
-import android.view.GestureDetector.*;
-import android.view.View.*;
 
 public class KeyBoradView extends View {
 	/**
@@ -29,7 +27,7 @@ public class KeyBoradView extends View {
 	 */
 	private static int sideFontSize = 0;
     
-    private GestureDetector mGestureDetector;
+    private GestureDetector myGestureDetector;
 	/**
 	 * 字
 	 * @param context
@@ -51,11 +49,10 @@ public class KeyBoradView extends View {
 	}
     
     private void init(Context context){
-        this.setOnTouchListener(this);   
         this.setFocusable(true);   
         this.setClickable(true);   
         this.setLongClickable(true);   
-        mGestureDetector = new GestureDetector(new MySimpleGesture());   
+        myGestureDetector = new GestureDetector(context, new MySimpleOnGestureListener(this));
     }
 	/**
 	 * 自定义view大小
@@ -250,81 +247,8 @@ public class KeyBoradView extends View {
         p = null;
 	}
 
-	/**
-	 * 按键只需要接click；和移动
-	 * @param event
-	 * @return
-	 */
-    public boolean onTouch(View v, MotionEvent event) {   
-        if (event.getAction() == MotionEvent.ACTION_UP) {   
-            Log.i("MyGesture", "MotionEvent.ACTION_UP");   
-        }   
-        return mGestureDetector.onTouchEvent(event);   
-    }   
-
-    // SimpleOnGestureListener implements GestureDetector.OnDoubleTapListener, GestureDetector.OnGestureListener   
-    private class MySimpleGesture extends SimpleOnGestureListener {   
-        // 双击的第二下Touch down时触发    
-        public boolean onDoubleTap(MotionEvent e) {   
-            Log.i("MyGesture", "onDoubleTap");   
-            return super.onDoubleTap(e);   
-        }   
-
-        // 双击的第二下Touch down和up都会触发，可用e.getAction()区分   
-        public boolean onDoubleTapEvent(MotionEvent e) {   
-            Log.i("MyGesture", "onDoubleTapEvent");   
-            return super.onDoubleTapEvent(e);   
-        }   
-
-        // Touch down时触发    
-        public boolean onDown(MotionEvent e) {   
-            Log.i("MyGesture", "onDown");   
-            return super.onDown(e);   
-        }   
-
-        // Touch了滑动一点距离后，up时触发   
-        public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {   
-            Log.i("MyGesture", "onFling");   
-            return super.onFling(e1, e2, velocityX, velocityY);   
-        }   
-
-        // Touch了不移动一直Touch down时触发   
-        public void onLongPress(MotionEvent e) {   
-            Log.i("MyGesture", "onLongPress");   
-            super.onLongPress(e);   
-        }   
-
-        // Touch了滑动时触发   
-        public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {   
-            Log.i("MyGesture", "onScroll");   
-            return super.onScroll(e1, e2, distanceX, distanceY);   
-        }   
-
-        /*  
-         * Touch了还没有滑动时触发  
-         * (1)onDown只要Touch Down一定立刻触发  
-         * (2)Touch Down后过一会没有滑动先触发onShowPress再触发onLongPress  
-         * So: Touch Down后一直不滑动，onDown -> onShowPress -> onLongPress这个顺序触发。  
-         */  
-        public void onShowPress(MotionEvent e) {   
-            Log.i("MyGesture", "onShowPress");   
-            super.onShowPress(e);   
-        }   
-
-        /*  
-         * 两个函数都是在Touch Down后又没有滑动(onScroll)，又没有长按(onLongPress)，然后Touch Up时触发  
-         * 点击一下非常快的(不滑动)Touch Up: onDown->onSingleTapUp->onSingleTapConfirmed  
-         * 点击一下稍微慢点的(不滑动)Touch Up: onDown->onShowPress->onSingleTapUp->onSingleTapConfirmed   
-         */    
-        public boolean onSingleTapConfirmed(MotionEvent e) {   
-            Log.i("MyGesture", "onSingleTapConfirmed");   
-            return super.onSingleTapConfirmed(e);   
-        }   
-        public boolean onSingleTapUp(MotionEvent e) {   
-            Log.i("MyGesture", "onSingleTapUp");   
-            return super.onSingleTapUp(e);   
-        }   
-    }   
-    
-
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+		return myGestureDetector.onTouchEvent(event);
+	}
 }
