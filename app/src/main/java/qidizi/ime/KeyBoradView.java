@@ -7,7 +7,7 @@ import android.view.*;
 import android.view.GestureDetector.*;
 import android.view.View.*;
 
-public class KeyBoradView extends View   implements OnTouchListener{
+public class KeyBoradView extends View {
 	/**
 	 * 计算得到的单键连长
 	 */
