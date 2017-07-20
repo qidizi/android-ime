@@ -20,14 +20,10 @@
             <intent-filter>
                 <action android:name="android.view.InputMethod" />
             </intent-filter>
-            <!-- 指定系统设置中输入法选项触发的面板 -->
-            <meta-data
-                android:name="android.view.im"
-                android:resource="@xml/method" />
         </service>
 
         <activity
-            android:name=".ImePreferences"
+            android:name=".MyActivity"
             android:label="@string/prefName" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -35,7 +31,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".FloatActivity" />
     </application>
 
 </manifest>
