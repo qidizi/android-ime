@@ -59,7 +59,7 @@ public class ImePreferences extends PreferenceActivity {
 
     public boolean clear(View view) {
         TextView tv = (TextView)view;
-        tv.setText("kkkkkkkkkkkkkkkkkkkkkk");
+        tv.setText("");
         return  true;
     }
 }

@@ -20,7 +20,7 @@ public abstract class InputMethodSettingsFragment extends PreferenceFragment
         final Context context = getActivity();
         setPreferenceScreen(getPreferenceManager().createPreferenceScreen(context));
         //加载系统内部的配置项目
-        mSettings.init(context, getPreferenceScreen());        
+        //mSettings.init(context, getPreferenceScreen());        
     }
 
     /**
