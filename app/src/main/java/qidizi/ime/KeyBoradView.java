@@ -4,8 +4,9 @@ import android.content.*;
 import android.graphics.*;
 import android.util.*;
 import android.view.*;
+import android.widget.TextView;
 
-public class KeyBoradView extends View {
+public class KeyBoradView extends View implements View.OnTouchListener,GestureDetector.OnGestureListener, GestureDetector.OnDoubleTapListener{
 	/**
 	 * 计算得到的单键连长
 	 */
@@ -51,8 +52,8 @@ public class KeyBoradView extends View {
     private void init(Context context){
         this.setFocusable(true);   
         this.setClickable(true);   
-        this.setLongClickable(true);   
-        myGestureDetector = new GestureDetector(context, new MySimpleOnGestureListener(this));
+        this.setLongClickable(true);
+        myGestureDetector = new GestureDetector(context, this);
     }
 	/**
 	 * 自定义view大小
@@ -247,8 +248,79 @@ public class KeyBoradView extends View {
         p = null;
 	}
 
+
+	private  void tip(String str) {
+		TextView tv = (TextView)this.getRootView().findViewById(R.id.textView);
+		tv.append("\n" + str);
+	}
+
 	@Override
-	public boolean onTouchEvent(MotionEvent event) {
+	public boolean onTouch(View v, MotionEvent event) {
+		tip("onTouchEvent " + MotionEvent.actionToString(event.getAction()));
 		return myGestureDetector.onTouchEvent(event);
 	}
+
+
+
+	@Override
+	public boolean onDown(MotionEvent e) {
+		tip("onDown:" + MotionEvent.actionToString(e.getAction()));
+		return true;
+	}
+
+	@Override
+	public boolean onSingleTapUp(MotionEvent e) {
+		tip("onSingleTapUp:" + MotionEvent.actionToString(e.getAction()));
+		return true;
+	}
+
+	@Override
+	public boolean onDoubleTap(MotionEvent e) {
+		tip("onDoubleTap:" + MotionEvent.actionToString(e.getAction()));
+		return true;
+	}
+
+	@Override
+	public boolean onDoubleTapEvent(MotionEvent e) {
+		return false;
+	}
+
+	@Override
+	public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
+		tip("onFling:" +
+				"e1." + MotionEvent.actionToString(e1.getAction()) +
+				"e2." + MotionEvent.actionToString(e1.getAction()) +
+				"x." + velocityX +
+				"y." + velocityY
+		);
+		return true;
+	}
+
+	@Override
+	public boolean onScroll(MotionEvent e1, MotionEvent e2, float distanceX, float distanceY) {
+		tip("onScroll:" +
+				"e1." + MotionEvent.actionToString(e1.getAction()) +
+				"e2." + MotionEvent.actionToString(e1.getAction()) +
+				"x." + distanceX +
+				"y." + distanceY
+		);
+		return true;
+	}
+
+	@Override
+	public boolean onSingleTapConfirmed(MotionEvent e) {
+		tip("onSingleTapConfirmed:" + MotionEvent.actionToString(e.getAction()));
+		return true;
+	}
+
+	@Override
+	public void onLongPress(MotionEvent e) {
+		tip("onLongPress:" + MotionEvent.actionToString(e.getAction()));
+	}
+
+	@Override
+	public void onShowPress(MotionEvent e) {
+		tip("onShowPress:" + MotionEvent.actionToString(e.getAction()));
+	}
+
 }
