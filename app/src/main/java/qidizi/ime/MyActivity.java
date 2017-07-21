@@ -21,8 +21,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.view.*;
 
-public class MyActivity extends Activity
-{
+public class MyActivity extends Activity {
     /**
      * 计算得到的单键连长
      */
@@ -32,14 +31,14 @@ public class MyActivity extends Activity
      */
     private final static int maxKeySize = 106;
     /**
-    最小的屏幕，计算出边长达不到时拒绝使用
-    */
+     * 最小的屏幕，计算出边长达不到时拒绝使用
+     */
     private final static int minKeySize = 30;
 
     /**
      * 行数
      */
-    private static final  int rows  = 5;
+    private static final int rows = 5;
     /**
      * 列数
      */
@@ -53,20 +52,22 @@ public class MyActivity extends Activity
      */
     private static int sideFontSize = 0;
 
+    //
+    private View board;
+
     // debug view
     private TextView view;
     // 用来缓存文字的集合
-    private  static String logs = "";
-
+    private static String logs = "";
 
 
     /**
      * 画出键盘
+     *
      * @param savedInstanceState
      */
     @Override
-    public void onCreate(Bundle savedInstanceState)
-    {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         createBoard();
     }
@@ -106,17 +107,17 @@ public class MyActivity extends Activity
     /**
      * 添加键盘与测试view
      */
-    private void addView () {
+    private void addView() {
         LinearLayout ll = new LinearLayout(this);
+        ll.setPadding(0, 10, 0, 0);
         // 上下排列
         ll.setOrientation(LinearLayout.VERTICAL);
         // 左右剧中
         ll.setHorizontalGravity(Gravity.CENTER);
         // 通过callback的方式来画键盘
-        View board = new View(this){
+        board = new View(this) {
             @Override
-            protected void onDraw(Canvas canvas)
-            {
+            protected void onDraw(Canvas canvas) {
                 super.onDraw(canvas);
                 // 回调方式，给外面类传递画布
                 drawBoard(canvas, this);
@@ -128,8 +129,7 @@ public class MyActivity extends Activity
              * @param heightMeasureSpec
              */
             @Override
-            protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
-            {
+            protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
                 // 通知android，重新调整大小
                 setMeasuredDimension(keySize * cells, keySize * rows);
             }
@@ -146,8 +146,7 @@ public class MyActivity extends Activity
         setContentView(ll);
     }
 
-    private void debug(String str)
-    {
+    private void debug(String str) {
         logs = str.concat('\n' + logs);
         logs = logs.substring(0, Math.min(1500, logs.length() - 1));
         // 只显示前面部分字符
@@ -155,20 +154,29 @@ public class MyActivity extends Activity
     }
 
     @Override
-    public boolean dispatchTouchEvent(MotionEvent ev)
-    {
-        String str = MotionEvent.actionToString(ev.getAction())  + " (" +
-            ev.getX() + ',' + ev.getY() + ')';
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+        int[] xy= new int[2];
+        board.getLocationOnScreen(xy);
+        String str = String.format(
+                "%s (%d,%d) - (%d,%d) = (%d, %d)",
+                MotionEvent.actionToString(ev.getAction()),
+                (int) ev.getX(),
+                (int) ev.getY(),
+                xy[0],
+                xy[1],
+                (int) (ev.getX() - xy[0]),
+                (int) (ev.getY() - xy[1])
+        );
         debug(str);
         return true;
     }
 
     /**
      * 画键盘
+     *
      * @param canvas
      */
-    final public void drawBoard(Canvas canvas, View view)
-    {
+    final public void drawBoard(Canvas canvas, View view) {
         view.setBackgroundColor(Color.BLACK);
         _getFontSize();
         // 抗锯齿
@@ -177,21 +185,19 @@ public class MyActivity extends Activity
         int height = keySize * rows;
 
         // 画坚线
-        for (int i = 1; i < cells; i++)
-        {
+        for (int i = 1; i < cells; i++) {
             canvas.drawLine(keySize * i, 0, keySize * i, height, paint);
         }
 
         // 画横线
-        for (int i = 1; i < rows; i++)
-        {
+        for (int i = 1; i < rows; i++) {
             canvas.drawLine(0, i * keySize, keySize * cells, i * keySize, paint);
         }
 
         // 画字,x->为正；y↓为正；view的左上角为（0，0）
 
         // 每键4角 + 4边 + 1中间 = 9字
-        String str =  "0";
+        String str = "0";
         paint.setTypeface(Typeface.MONOSPACE);
         // drawtext的x指字中心离原点距离，y却是指字底边到原点距离（并非中心）
         paint.setTextAlign(Paint.Align.CENTER);
@@ -199,21 +205,17 @@ public class MyActivity extends Activity
         paint.setTypeface(typeface);
         paint.setColor(Color.WHITE);
         // 字中心点大概到y点，大概是0.4个字高
-        double x = 0,y = 0, baseLine = 0.3;
+        double x = 0, y = 0, baseLine = 0.3;
 
-        for (int row = 1; row <= rows; row++)
-        {
-            for (int cell = 1; cell <= cells; cell++)
-            {
-                for (int i = 1; i <= 9; i++)
-                {
+        for (int row = 1; row <= rows; row++) {
+            for (int cell = 1; cell <= cells; cell++) {
+                for (int i = 1; i <= 9; i++) {
                     // 键字顺序为左角，上边，右角，右边，右下角，下边，左下角，中间
                     str = "" + i;
                     paint.setTextSize(sideFontSize);
                     paint.setColor(Color.GRAY);
 
-                    switch (i)
-                    {
+                    switch (i) {
                         case 1:
                             // x右移半个字
                             x = keySize * (cell - 1) + sideFontSize * 0.5;
@@ -263,24 +265,23 @@ public class MyActivity extends Activity
 
 
                     if (
-                        (1 == row && i < 4)
-                    // 第一行，上边无字
-                        ||
-                        (1 == cell && (1 == i || 7 == i || 8 == i))
-                    // 第一列左边
-                        ||
-                        (5 == row && i >= 5 && i <= 7)
-                    // 最后行下边
-                        ||
-                        (cell == cells && i >= 3 && i <= 5)
-                    // 最右列右边
-                        )
-                    {
-                        str =  "\0";
+                            (1 == row && i < 4)
+                                    // 第一行，上边无字
+                                    ||
+                                    (1 == cell && (1 == i || 7 == i || 8 == i))
+                                    // 第一列左边
+                                    ||
+                                    (5 == row && i >= 5 && i <= 7)
+                                    // 最后行下边
+                                    ||
+                                    (cell == cells && i >= 3 && i <= 5)
+                        // 最右列右边
+                            ) {
+                        str = "\0";
                     }
 
                     // x在笔刷初始时已经设定成中心为0点;
-                    canvas.drawText(str, (float)x, (float)y + 3, paint);
+                    canvas.drawText(str, (float) x, (float) y + 3, paint);
                 }
             }
         }
@@ -292,11 +293,9 @@ public class MyActivity extends Activity
      * 计算键位上边与中心字大小
      * 一般字体都是高比宽大，所以，只需要考虑高度合适即可
      */
-    private void _getFontSize()
-    {
+    private void _getFontSize() {
         //目前不清楚机制，如果已经设置了，就没有必要再重新计算
-        if (centerFontSize > 0)
-        {
+        if (centerFontSize > 0) {
             return;
         }
 
@@ -306,19 +305,17 @@ public class MyActivity extends Activity
         double bigHeight = 0.5;
         Paint p = new Paint();
         Rect bounds = new Rect();
-        int fontHeight = (int)Math.round(keySize * bigHeight);
+        int fontHeight = (int) Math.round(keySize * bigHeight);
         int height = 0;
 
         // 先计算中间字高度
-        for (int size = 1; fontHeight > height; size++)
-        {
+        for (int size = 1; fontHeight > height; size++) {
             // 不停的调整size，计算单字高度
             p.setTextSize(size);
             p.getTextBounds(s, 0, s.length(), bounds);
             int tmp = bounds.height();
 
-            if (tmp > fontHeight)
-            {
+            if (tmp > fontHeight) {
                 // 已经超出了，就取前面的值
                 break;
             }
@@ -329,19 +326,17 @@ public class MyActivity extends Activity
         centerFontSize = height;
         // 重设
         height = 0;
-        fontHeight = (int)Math.round(keySize * (1 - bigHeight) / 2);
+        fontHeight = (int) Math.round(keySize * (1 - bigHeight) / 2);
 
 
         // 先计算边上字高度
-        for (int size = 1; fontHeight > height; size++)
-        {
+        for (int size = 1; fontHeight > height; size++) {
             // 不停的调整size，计算单字高度
             p.setTextSize(size);
             p.getTextBounds(s, 0, s.length(), bounds);
             int tmp = bounds.height();
 
-            if (tmp > fontHeight)
-            {
+            if (tmp > fontHeight) {
                 // 已经超出了，就取前面的值
                 break;
             }
