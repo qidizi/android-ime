@@ -17,6 +17,8 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.util.*;
+import android.widget.TextView;
+import android.widget.Toast;
 
 public class MyActivity extends Activity
 {
@@ -27,7 +29,7 @@ public class MyActivity extends Activity
     /**
      * 大屏时，最大键边长
      */
-    private final static int maxKeySize = 50;
+    private final static int maxKeySize = 106;
     /**
     最小的屏幕，计算出边长达不到时拒绝使用
     */
@@ -50,7 +52,11 @@ public class MyActivity extends Activity
      */
     private static int sideFontSize = 0;
 
-    private EditText editText;
+    // debug view
+    private TextView view;
+    // 用来缓存文字的集合
+    private  static String logs = "";
+
 
 
     /**
@@ -61,60 +67,88 @@ public class MyActivity extends Activity
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        createBoard();
+    }
+
+    /**
+     * 初始化键盘
+     */
+    private void createBoard() {
+        if (keySize > 0) {
+            // 已经计算过
+            addView();
+            return;
+        }
+
+        // 计算screen的边长，不理会窗口的
+        DisplayMetrics displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        // 代码上的高与实物的高没有联系
+        int height = displayMetrics.heightPixels;
+        int width = displayMetrics.widthPixels;
+        // 只取最小边来使用
+        int minSide = Math.min(height, width);
+        keySize = Math.round(minSide / cells);
+        // 键边有一个上限
+        keySize = Math.min(keySize, maxKeySize);
+
+        if (keySize < minKeySize) {
+            // 屏太小，无法正常使用
+            Toast.makeText(this.getBaseContext(), "设备屏幕过小，输入法无法使用", Toast.LENGTH_LONG);
+            System.exit(0);
+            return;
+        }
+
         addView();
     }
 
-    private void addView()
-    {
-
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        int scnheight = displayMetrics.heightPixels;
-        final int width = displayMetrics.widthPixels;
-
-
-
-
+    /**
+     * 添加键盘与测试view
+     */
+    private void addView () {
         LinearLayout ll = new LinearLayout(this);
         // 上下排列
         ll.setOrientation(LinearLayout.VERTICAL);
-        keySize = Math.round(width / cells);
         // 通过callback的方式来画键盘
         View board = new View(this){
             @Override
             protected void onDraw(Canvas canvas)
             {
                 super.onDraw(canvas);
-                // 调用外面的方法
+                // 回调方式，给外面类传递画布
                 drawBoard(canvas, this);
             }
 
+            /**
+             * 主动控制键盘大小,不理会android自动布局
+             * @param widthMeasureSpec
+             * @param heightMeasureSpec
+             */
             @Override
             protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
             {
-                Log.i("", width + "  kkkk " + keySize);
-                setMeasuredDimension(width, keySize * rows);
+                // 通知android，重新调整大小
+                setMeasuredDimension(keySize * cells, keySize * rows);
             }
         };
+        // 显示煞
         ll.addView(board);
 
-        editText = new EditText(this);
-        editText.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v)
-                {
-                    ((EditText)v).setText("");
-                }
-
-            });
-
-        ll.addView(editText);
+        // 创建展示测试数据的view
+        view = new TextView(this);
+        view.setTextSize(8);
+        // 显现view
+        ll.addView(view);
+        // 显示rootview
         setContentView(ll);
     }
-    private void tip(String str)
+
+    private void debug(String str)
     {
-        //  Log.i("", str);
-        editText.setText(str + editText.getText());
+        logs = str.concat('\n' + logs);
+        logs = logs.substring(0, Math.min(1500, logs.length() - 1));
+        // 只显示前面部分字符
+        view.setText(logs);
     }
 
     @Override
@@ -122,7 +156,7 @@ public class MyActivity extends Activity
     {
         String str = MotionEvent.actionToString(ev.getAction())  + " (" +
             ev.getX() + ',' + ev.getY() + ')';
-        tip(str);
+        debug(str);
         return true;
     }
 
@@ -132,11 +166,6 @@ public class MyActivity extends Activity
      */
     final public void drawBoard(Canvas canvas, View view)
     {
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        int scnheight = displayMetrics.heightPixels;
-        final int width = displayMetrics.widthPixels;
-        //final int width = getWindow().getDecorView().getWidth();
         view.setBackgroundColor(Color.BLACK);
         _getFontSize();
         // 抗锯齿
@@ -153,7 +182,7 @@ public class MyActivity extends Activity
         // 画横线
         for (int i = 1; i < rows; i++)
         {
-            canvas.drawLine(0, i * keySize, width, i * keySize, paint);
+            canvas.drawLine(0, i * keySize, keySize * cells, i * keySize, paint);
         }
 
         // 画字,x->为正；y↓为正；view的左上角为（0，0）
