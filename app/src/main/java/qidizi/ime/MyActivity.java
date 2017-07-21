@@ -20,6 +20,7 @@ import android.util.*;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.view.*;
+import java.util.*;
 
 public class MyActivity extends Activity {
     /**
@@ -38,7 +39,7 @@ public class MyActivity extends Activity {
     /**
      * 行数
      */
-    private static final int rows = 5;
+    private static final int rows = 4;
     /**
      * 列数
      */
@@ -51,6 +52,11 @@ public class MyActivity extends Activity {
      * 边上的字textsize
      */
     private static int sideFontSize = 0;
+    
+    /**
+    键0点到屏幕0点，与键字符对应关系
+    */
+    private static Map<String,String> keys;
 
     //
     private View board;
@@ -59,6 +65,10 @@ public class MyActivity extends Activity {
     private TextView view;
     // 用来缓存文字的集合
     private static String logs = "";
+    
+    // 键符,按照单个键显示字符，键内,左上>正上>右上>右>右下>下>左下>左>中，左键>右键>上行>下行对应
+    // 不想使用位置使用\0占位
+    private final static String chars = "1~@2#%3*-4_/5'(6)?7!:8;\"9,.0";
 
 
     /**
@@ -206,12 +216,20 @@ public class MyActivity extends Activity {
         paint.setColor(Color.WHITE);
         // 字中心点大概到y点，大概是0.4个字高
         double x = 0, y = 0, baseLine = 0.3;
+        int charIndex = 0;
+        int[] xy= new int[2];
+        //键盘离屏幕位移
+        board.getLocationOnScreen(xy);
+       
+     
 
         for (int row = 1; row <= rows; row++) {
             for (int cell = 1; cell <= cells; cell++) {
                 for (int i = 1; i <= 9; i++) {
                     // 键字顺序为左角，上边，右角，右边，右下角，下边，左下角，中间
-                    str = "" + i;
+                    str = "" + chars.charAt(charIndex++);
+                    //计算出键0点与屏幕0点距离
+                    keys[xy] = 
                     paint.setTextSize(sideFontSize);
                     paint.setColor(Color.GRAY);
 
@@ -271,7 +289,7 @@ public class MyActivity extends Activity {
                                     (1 == cell && (1 == i || 7 == i || 8 == i))
                                     // 第一列左边
                                     ||
-                                    (5 == row && i >= 5 && i <= 7)
+                                    (rows == row && i >= 5 && i <= 7)
                                     // 最后行下边
                                     ||
                                     (cell == cells && i >= 3 && i <= 5)
