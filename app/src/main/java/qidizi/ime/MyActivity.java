@@ -20,6 +20,7 @@ import android.util.*;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.view.*;
+
 import java.util.*;
 
 public class MyActivity extends Activity {
@@ -39,7 +40,7 @@ public class MyActivity extends Activity {
     /**
      * 行数
      */
-    private static final int rows = 4;
+    private static final int rows = 5;
     /**
      * 列数
      */
@@ -52,11 +53,6 @@ public class MyActivity extends Activity {
      * 边上的字textsize
      */
     private static int sideFontSize = 0;
-    
-    /**
-    键0点到屏幕0点，与键字符对应关系
-    */
-    private static Map<String,String> keys;
 
     //
     private View board;
@@ -65,10 +61,72 @@ public class MyActivity extends Activity {
     private TextView view;
     // 用来缓存文字的集合
     private static String logs = "";
-    
+
     // 键符,按照单个键显示字符，键内,左上>正上>右上>右>右下>下>左下>左>中，左键>右键>上行>下行对应
     // 不想使用位置使用\0占位
-    private final static String chars = "1~@2#%3*-4_/5'(6)?7!:8;\"9,.0";
+    private final static String[][] chars = {
+            // \0属于8进制转义，不能使用，如\012又是另外一个字符了，并不是\0,1,2
+            {
+                    "~!_-\u0000\u0000\u0000`1",// 行2列1
+                    "+@{[\u0000\u0000\u0000=2",
+                    "}#|\\\u0000\u0000\u0000]3",
+                    ":$\"'\u0000\u0000\u0000;4",
+                    "<%>.\u0000\u0000\u0000,5",
+                    "?^\u0000\u0000\u0000\u0000\u0000/6",
+                    "\u0000&\u0000\u0000\u0000\u0000\u0000\u00007",
+                    "\u0000*\u0000\u0000\u0000\u0000\u0000\u00008",
+                    "\u0000(\u0000\u0000\u0000\u0000\u0000\u00009",
+                    "\u0000)\u0000\u0000\u0000\u0000\u0000\u00000",
+            },
+            {
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000Q",//行1列1
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000W",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000E",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000R",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000T",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000Y",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000U",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000I",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000O",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000P",
+            },
+            {
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000A",// 行2列1
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000S",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000D",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000F",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000G",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000H",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000J",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000K",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000L",
+                    "\u0000\u2326\u0000\u0000\u0000\u0000\u0000\u0000\u232B",
+            },
+            {
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000Z",// 行2列1
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000X",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000C",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000V",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000B",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000N",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000M",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u2191",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u2318",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u21EA",
+            },
+            {
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u2325",// 行2列1
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u21B9",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u238B",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u2381",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u2423",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u2190",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u2193",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u2192",
+                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u23CE",
+            }
+    };
 
 
     /**
@@ -165,7 +223,7 @@ public class MyActivity extends Activity {
 
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
-        int[] xy= new int[2];
+        int[] xy = new int[2];
         board.getLocationOnScreen(xy);
         String str = String.format(
                 "%s (%d,%d) - (%d,%d) = (%d, %d)",
@@ -205,9 +263,6 @@ public class MyActivity extends Activity {
         }
 
         // 画字,x->为正；y↓为正；view的左上角为（0，0）
-
-        // 每键4角 + 4边 + 1中间 = 9字
-        String str = "0";
         paint.setTypeface(Typeface.MONOSPACE);
         // drawtext的x指字中心离原点距离，y却是指字底边到原点距离（并非中心）
         paint.setTextAlign(Paint.Align.CENTER);
@@ -216,22 +271,22 @@ public class MyActivity extends Activity {
         paint.setColor(Color.WHITE);
         // 字中心点大概到y点，大概是0.4个字高
         double x = 0, y = 0, baseLine = 0.3;
-        int charIndex = 0;
-        int[] xy= new int[2];
+        int[] xy = new int[2];
         //键盘离屏幕位移
         board.getLocationOnScreen(xy);
-       
-     
+        int row,cell,i;
+        char keyChar;
 
-        for (int row = 1; row <= rows; row++) {
-            for (int cell = 1; cell <= cells; cell++) {
-                for (int i = 1; i <= 9; i++) {
+        for (row = 1; row <= rows; row++) {
+            for (cell = 1; cell <= cells; cell++) {
+                //计算出键0点与屏幕0点距离,第x行y列=》键字符，字符见上面顺序，总是是9个
+                for (i = 1; i <= 9; i++) {
                     // 键字顺序为左角，上边，右角，右边，右下角，下边，左下角，中间
-                    str = "" + chars.charAt(charIndex++);
-                    //计算出键0点与屏幕0点距离
-                    keys[xy] = 
+                    // 没有提供足够的键符，用\0代替
+                    keyChar = i > chars[row - 1][cell - 1].length() ?
+                            '\0' : chars[row - 1][cell - 1].charAt(i - 1);
                     paint.setTextSize(sideFontSize);
-                    paint.setColor(Color.GRAY);
+                    paint.setColor(Color.rgb(230,230,230));
 
                     switch (i) {
                         case 1:
@@ -280,26 +335,8 @@ public class MyActivity extends Activity {
                             y = keySize * (row - 1 + 0.5) + centerFontSize * baseLine;
                             break;
                     }
-
-
-                    if (
-                            (1 == row && i < 4)
-                                    // 第一行，上边无字
-                                    ||
-                                    (1 == cell && (1 == i || 7 == i || 8 == i))
-                                    // 第一列左边
-                                    ||
-                                    (rows == row && i >= 5 && i <= 7)
-                                    // 最后行下边
-                                    ||
-                                    (cell == cells && i >= 3 && i <= 5)
-                        // 最右列右边
-                            ) {
-                        str = "\0";
-                    }
-
                     // x在笔刷初始时已经设定成中心为0点;
-                    canvas.drawText(str, (float) x, (float) y + 3, paint);
+                    canvas.drawText("" + keyChar, (float) x, (float) y + 3, paint);
                 }
             }
         }
