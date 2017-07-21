@@ -19,6 +19,7 @@ import android.widget.LinearLayout;
 import android.util.*;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.view.*;
 
 public class MyActivity extends Activity
 {
@@ -109,6 +110,8 @@ public class MyActivity extends Activity
         LinearLayout ll = new LinearLayout(this);
         // 上下排列
         ll.setOrientation(LinearLayout.VERTICAL);
+        // 左右剧中
+        ll.setHorizontalGravity(Gravity.CENTER);
         // 通过callback的方式来画键盘
         View board = new View(this){
             @Override
