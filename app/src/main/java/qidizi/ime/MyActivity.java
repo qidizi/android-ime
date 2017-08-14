@@ -105,9 +105,13 @@ public class MyActivity extends Activity
     //down到up移动距离在这个内属于click
     private static final int maxClickMove = 10;
     //按下时坐标
-    static float[] dowXY = new float[2];
+    private static float[] dowXY = new float[2];
     // 多指
-    static boolean isMultiFinger = false;
+    private static boolean isMultiFinger = false;
+    // 移动多少距离内属于键位8边（角）符号，超过就算是手势了
+    private static int keyBoxRange = keySize * 2;
+
+
     /**
      配置键
      */
@@ -279,21 +283,26 @@ public class MyActivity extends Activity
                 );
                 debug(str);
                 
-                float max = Math.max(Math.abs( ev.getX() - dowXY[0]),Math.abs( ev.getY()-dowXY[1]));
+                float maxMove = Math.max(Math.abs( ev.getX() - dowXY[0]),Math.abs( ev.getY()-dowXY[1]));
                 
-                if (maxClickMove >= max){
+                if (maxClickMove >= maxMove){
                     // 当做点击处理点击
                     click(ev);
                     return true;
                 }
                 
                 //单指移动，是键
-                if(1==ev.getPointerCount() ){
-                    
+                if(!isMultiFinger ){
+                    // 小距离移动触发本键位的8向符号
+                    if (maxMove <= keyBoxRange) {
+
+                        return  true;
+                    }
+                    //大距离移动触发手势
                     return true;
                 }
                 
-                //
+                //多指移动
                 break;
             case MotionEvent.ACTION_MOVE:
                 debug("move");
@@ -310,21 +319,41 @@ public class MyActivity extends Activity
     }
 
     /**
+     * key内移动，触发对应边、角上的符号
+     * @param ev
+     */
+    private void keyFinger(MotionEvent ev) {
+        // 得到down点
+        int[] rc = getKeyRowCell(dowXY[0], dowXY[1]);
+        // 计算出角或边特殊情况：平面直角坐标系中，圆心坐标为坐标原点（0,0）
+        // 计算夹角
+        //1。设A点旋转前的角度为δ，则旋转(逆时针)到C点后角度为δ+β
+       // 2。求A，B两点的距离：dist1=|AB|=y/sin(δ)=x/cos(δ)
+
+        ev.getX() - dowXY[0]),Math.abs( ev.getY()-dowXY[1]
+    }
+    /**
     获取当前事件对应key的
     */
-    private int[] getKeyRowCell(MotionEvent ev){
+    private int[] getKeyRowCell(int x, int y){
         int[] boardXY = new int[2];
         //键盘离屏幕位移
         board.getLocationOnScreen(boardXY);
         int[] rc = new int[2];
-        rc[0] = (int)Math.abs(Math.ceil((boardXY[1] - ev.getY() ) / keySize));
-        rc[1] = (int)Math.abs(Math.ceil((boardXY[0] - ev.getX() ) / keySize));
+        rc[0] = (int)Math.abs(Math.ceil((boardXY[1] - x) / keySize));
+        rc[1] = (int)Math.abs(Math.ceil((boardXY[0] - y) / keySize));
         return rc;
     }
     
     
     final private void click (MotionEvent Ev){
-        int[] rc = getKeyRowCell(Ev);
+        int[] rc = getKeyRowCell(Ev.getX(), Ev.getY());
+
+        if (rc[0] < 0 || rc[0] >= keyboardRows || rc[1] < 0 || rc[1] >= keyboardCells) {
+            // 超出rows或是cells
+            return;
+        }
+
         String keySymbol = keySymbols[rc[0]][rc[1]][KEY_CENTER_INDEX][KEY_SYMBOL];
         debug(String.format("click row %d cell %d : %s",rc[0],rc[1],keySymbol));
     }
