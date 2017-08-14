@@ -23,7 +23,8 @@ import android.view.*;
 
 import java.util.*;
 
-public class MyActivity extends Activity {
+public class MyActivity extends Activity
+{
     /**
      * 计算得到的单键连长
      */
@@ -31,28 +32,32 @@ public class MyActivity extends Activity {
     /**
      * 大屏时，最大键边长
      */
-    private final static int maxKeySize = 106;
+    private final static int keyMaxSize = 106;
     /**
      * 最小的屏幕，计算出边长达不到时拒绝使用
      */
-    private final static int minKeySize = 30;
+    private final static int keyMinSize = 30;
 
     /**
      * 行数
      */
-    private static final int rows = 5;
+    private static final int keyboardRows = 5;
     /**
      * 列数
      */
-    private static final int cells = 10;
+    private static final int keyboardCells = 10;
+    /**
+     键符个数
+     */
+    private final static int keySymbolNum = 9;
     /**
      * 中间大字textsize
      */
-    private static int centerFontSize = 0;
+    private static int keyCenterSize = 0;
     /**
      * 边上的字textsize
      */
-    private static int sideFontSize = 0;
+    private static int keySideSize = 0;
 
     //
     private View board;
@@ -62,93 +67,104 @@ public class MyActivity extends Activity {
     // 用来缓存文字的集合
     private static String logs = "";
 
-    // 键符,按照单个键显示字符，键内,左上>正上>右上>右>右下>下>左下>左>中，左键>右键>上行>下行对应
-    // 不想使用位置使用\0占位
-    private final static String[][] chars = {
-            // \0属于8进制转义，不能使用，如\012又是另外一个字符了，并不是\0,1,2
+    // 键中下标
+    private final static int KEY_CENTER_INDEX = 0;
+    // 键左上下标
+    private final static int KEY_LEFT_TOP_INDEX = 1;
+    // 键正上下标
+    private final static int KEY_TOP_INDEX = 2;
+    // 键右上下标
+    private final static int KEY_RIGHT_TOP_INDEX = 3;
+    // 键右下标
+    private final static int KEY_RIGHT_INDEX = 4;
+    // 键右下下标
+    private final static int KEY_RIGHT_BOTTOM_INDEX = 5;
+    // 键正下下标
+    private final static int KEY_BOTTOM_INDEX = 6;
+    // 键左下下标
+    private final static int KEY_LEFT_BOTTOM_INDEX = 7;
+    // 键左下标
+    private final static int KEY_LEFT_INDEX = 8;
+
+
+    // 下标用途常量
+    // a(shift未亮)面符号🔣
+    private final static int KEY_SYMBOL = 0;
+    // 非shift时符号对应code
+    private final static int KEY_SYMBOL_CODE = 1;
+    // shift时符号
+    private final static int KEY_SYMBOL_SHIFT = 2;
+    // shift符号对应code
+    private final static int KEY_SYMBOL_SHIFT_CODE = 3;
+    private final static int KEY_SYMBOL_MAX = 3;
+
+
+    // 键符,按照单个键显示字符，键内,中>左上>正上>右上>右>右下>下>左下>左，左键>右键>上行>下行对应
+    private static String[][][][] keySymbols = new String[keyboardRows][keyboardCells][keySymbolNum][KEY_SYMBOL_MAX];
+
+    //down到up移动距离在这个内属于click
+    private static final int maxClickMove = 10;
+    //按下时坐标
+    static float[] dowXY = new float[2];
+    // 多指
+    static boolean isMultiFinger = false;
+    /**
+     配置键
+     */
+    private void setKeys()
+    {
+        for (int cell = 0;cell < keyboardCells;cell++)
+        {
+            keySymbols[0][cell][KEY_CENTER_INDEX][KEY_SYMBOL] = "" + cell;
+        }
+        String  abc = "qwertyuiopasdfghjklzxcvbnm";
+        for (int i = 0, cell = 0, row = 1;i < abc.length();i++)
+        {
+
+            keySymbols[row][cell++][KEY_CENTER_INDEX][KEY_SYMBOL] = "" + abc.charAt(i);
+
+
+            if (cell >= keyboardCells)
             {
-                    "~!_-\u0000\u0000\u0000`1",// 行2列1
-                    "+@{[\u0000\u0000\u0000=2",
-                    "}#|\\\u0000\u0000\u0000]3",
-                    ":$\"'\u0000\u0000\u0000;4",
-                    "<%>.\u0000\u0000\u0000,5",
-                    "?^\u0000\u0000\u0000\u0000\u0000/6",
-                    "\u0000&\u0000\u0000\u0000\u0000\u0000\u00007",
-                    "\u0000*\u0000\u0000\u0000\u0000\u0000\u00008",
-                    "\u0000(\u0000\u0000\u0000\u0000\u0000\u00009",
-                    "\u0000)\u0000\u0000\u0000\u0000\u0000\u00000",
-            },
-            {
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000Q",//行1列1
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000W",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000E",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000R",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000T",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000Y",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000U",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000I",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000O",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000P",
-            },
-            {
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000A",// 行2列1
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000S",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000D",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000F",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000G",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000H",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000J",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000K",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000L",
-                    "\u0000\u2326\u0000\u0000\u0000\u0000\u0000\u0000\u232B",
-            },
-            {
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000Z",// 行2列1
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000X",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000C",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000V",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000B",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000N",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000M",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u2191",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u2318",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u21EA",
-            },
-            {
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u2325",// 行2列1
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u21B9",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u238B",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u2381",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u2423",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u2190",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u2193",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u2192",
-                    "\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u23CE",
+                cell = 0;
+                row++;
+
+                if (row >= keyboardRows)
+                {
+                    row = 0;
+                } 
             }
-    };
 
 
+        }
+
+
+    }
     /**
      * 画出键盘
      *
      * @param savedInstanceState
      */
     @Override
-    public void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
+        setKeys();
         createBoard();
     }
 
     /**
      * 初始化键盘
      */
-    private void createBoard() {
-        if (keySize > 0) {
+    private void createBoard()
+    {
+        if (keySize > 0)
+        {
             // 已经计算过
             addView();
             return;
         }
+
 
         // 计算screen的边长，不理会窗口的
         DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -158,11 +174,12 @@ public class MyActivity extends Activity {
         int width = displayMetrics.widthPixels;
         // 只取最小边来使用
         int minSide = Math.min(height, width);
-        keySize = Math.round(minSide / cells);
+        keySize = Math.round(minSide / keyboardCells);
         // 键边有一个上限
-        keySize = Math.min(keySize, maxKeySize);
+        keySize = Math.min(keySize, keyMaxSize);
 
-        if (keySize < minKeySize) {
+        if (keySize < keyMinSize)
+        {
             // 屏太小，无法正常使用
             Toast.makeText(this.getBaseContext(), "设备屏幕过小，输入法无法使用", Toast.LENGTH_LONG);
             System.exit(0);
@@ -175,7 +192,8 @@ public class MyActivity extends Activity {
     /**
      * 添加键盘与测试view
      */
-    private void addView() {
+    private void addView()
+    {
         LinearLayout ll = new LinearLayout(this);
         ll.setPadding(0, 10, 0, 0);
         // 上下排列
@@ -185,7 +203,8 @@ public class MyActivity extends Activity {
         // 通过callback的方式来画键盘
         board = new View(this) {
             @Override
-            protected void onDraw(Canvas canvas) {
+            protected void onDraw(Canvas canvas)
+            {
                 super.onDraw(canvas);
                 // 回调方式，给外面类传递画布
                 drawBoard(canvas, this);
@@ -197,9 +216,10 @@ public class MyActivity extends Activity {
              * @param heightMeasureSpec
              */
             @Override
-            protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+            protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
+            {
                 // 通知android，重新调整大小
-                setMeasuredDimension(keySize * cells, keySize * rows);
+                setMeasuredDimension(keySize * keyboardCells, keySize * keyboardRows);
             }
         };
         // 显示煞
@@ -214,7 +234,8 @@ public class MyActivity extends Activity {
         setContentView(ll);
     }
 
-    private void debug(String str) {
+    private void debug(String str)
+    {
         logs = str.concat('\n' + logs);
         logs = logs.substring(0, Math.min(1500, logs.length() - 1));
         // 只显示前面部分字符
@@ -222,44 +243,115 @@ public class MyActivity extends Activity {
     }
 
     @Override
-    public boolean dispatchTouchEvent(MotionEvent ev) {
-        int[] xy = new int[2];
-        board.getLocationOnScreen(xy);
-        String str = String.format(
-                "%s (%d,%d) - (%d,%d) = (%d, %d)",
-                MotionEvent.actionToString(ev.getAction()),
-                (int) ev.getX(),
-                (int) ev.getY(),
-                xy[0],
-                xy[1],
-                (int) (ev.getX() - xy[0]),
-                (int) (ev.getY() - xy[1])
-        );
-        debug(str);
+    public boolean dispatchTouchEvent(MotionEvent ev)
+    {
+        String str;
+        switch (ev.getAction()&MotionEvent.ACTION_MASK)
+        {
+            case MotionEvent.ACTION_DOWN:
+                isMultiFinger = false;
+                dowXY[0] = ev.getX();
+                dowXY[1] = ev.getY();
+                int[] xy = new int[2];
+                board.getLocationOnScreen(xy);
+                str = String.format(
+                    "down(%d,%d)-0点(%d,%d)=(%d, %d)",
+                    // 
+                    (int) ev.getX(),
+                    (int) ev.getY(),
+                    xy[0],
+                    xy[1],
+                    (int) (ev.getX() - xy[0]),
+                    (int) (ev.getY() - xy[1])
+                );
+                debug(str);
+                break;
+            case MotionEvent.ACTION_UP:
+                str = String.format(
+                    "up(%d,%d)-down(%d,%d)=(%d, %d)",
+                    // MotionEvent.actionToString(ev.getAction()),
+                    (int) ev.getX(),
+                    (int) ev.getY(),
+                    (int)dowXY[0],
+                    (int)dowXY[1],
+                    (int) (ev.getX() - dowXY[0]),
+                    (int) (ev.getY() - dowXY[1])
+                );
+                debug(str);
+                
+                float max = Math.max(Math.abs( ev.getX() - dowXY[0]),Math.abs( ev.getY()-dowXY[1]));
+                
+                if (maxClickMove >= max){
+                    // 当做点击处理点击
+                    click(ev);
+                    return true;
+                }
+                
+                //单指移动，是键
+                if(1==ev.getPointerCount() ){
+                    
+                    return true;
+                }
+                
+                //
+                break;
+            case MotionEvent.ACTION_MOVE:
+                debug("move");
+                break;
+            case MotionEvent.ACTION_POINTER_DOWN:
+                isMultiFinger = true;
+                debug("point  down");
+                break;
+            default:
+                debug(MotionEvent.actionToString(ev.getAction()&MotionEvent.ACTION_MASK));
+        }
+
         return true;
     }
 
+    /**
+    获取当前事件对应key的
+    */
+    private int[] getKeyRowCell(MotionEvent ev){
+        int[] boardXY = new int[2];
+        //键盘离屏幕位移
+        board.getLocationOnScreen(boardXY);
+        int[] rc = new int[2];
+        rc[0] = (int)Math.abs(Math.ceil((boardXY[1] - ev.getY() ) / keySize));
+        rc[1] = (int)Math.abs(Math.ceil((boardXY[0] - ev.getX() ) / keySize));
+        return rc;
+    }
+    
+    
+    final private void click (MotionEvent Ev){
+        int[] rc = getKeyRowCell(Ev);
+        String keySymbol = keySymbols[rc[0]][rc[1]][KEY_CENTER_INDEX][KEY_SYMBOL];
+        debug(String.format("click row %d cell %d : %s",rc[0],rc[1],keySymbol));
+    }
     /**
      * 画键盘
      *
      * @param canvas
      */
-    final public void drawBoard(Canvas canvas, View view) {
+    final public void drawBoard(Canvas canvas, View view)
+    {
         view.setBackgroundColor(Color.BLACK);
         _getFontSize();
         // 抗锯齿
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setColor(Color.LTGRAY);
-        int height = keySize * rows;
+        int height = keySize * keyboardRows;
 
         // 画坚线
-        for (int i = 1; i < cells; i++) {
+        for (int i = 1; i < keyboardCells; i++)
+        {
             canvas.drawLine(keySize * i, 0, keySize * i, height, paint);
         }
 
         // 画横线
-        for (int i = 1; i < rows; i++) {
-            canvas.drawLine(0, i * keySize, keySize * cells, i * keySize, paint);
+        for (int i = 1; i < keyboardRows; i++)
+        {
+            canvas.drawLine(0, i * keySize, keySize * keyboardCells, i * keySize, paint);
         }
 
         // 画字,x->为正；y↓为正；view的左上角为（0，0）
@@ -270,87 +362,100 @@ public class MyActivity extends Activity {
         paint.setTypeface(typeface);
         paint.setColor(Color.WHITE);
         // 字中心点大概到y点，大概是0.4个字高
-        double x = 0, y = 0, baseLine = 0.3;
+        double baseLine = 0.3;
         int[] xy = new int[2];
         //键盘离屏幕位移
         board.getLocationOnScreen(xy);
-        int row,cell,i;
-        char keyChar;
+        int row,cell;
 
-        for (row = 1; row <= rows; row++) {
-            for (cell = 1; cell <= cells; cell++) {
-                //计算出键0点与屏幕0点距离,第x行y列=》键字符，字符见上面顺序，总是是9个
-                for (i = 1; i <= 9; i++) {
-                    // 键字顺序为左角，上边，右角，右边，右下角，下边，左下角，中间
-                    // 没有提供足够的键符，用\0代替
-                    keyChar = i > chars[row - 1][cell - 1].length() ?
-                            '\0' : chars[row - 1][cell - 1].charAt(i - 1);
-                    paint.setTextSize(sideFontSize);
-                    paint.setColor(Color.rgb(230,230,230));
+        for (row = 1; row <= keyboardRows; row++)
+        {
+            for (cell = 1; cell <= keyboardCells; cell++)
+            {
+                // 中间字 
+                paint.setColor(Color.WHITE);
+                paint.setTextSize(keyCenterSize);
+                _draw(row, cell, KEY_CENTER_INDEX,
 
-                    switch (i) {
-                        case 1:
-                            // x右移半个字
-                            x = keySize * (cell - 1) + sideFontSize * 0.5;
-                            // y，中心点下移半个字高
-                            y = keySize * (row - 1) + sideFontSize * (0.5 + baseLine);
-                            break;
-                        case 2:
-                            x = keySize * (cell - 1 + 0.5);
-                            // y，中心点下移半个字高
-                            y = keySize * (row - 1) + sideFontSize * (0.5 + baseLine);
-                            break;
-                        case 3:
-                            x = keySize * cell - sideFontSize * 0.5;
-                            // y，中心点下移半个字高
-                            y = keySize * (row - 1) + sideFontSize * (0.5 + baseLine);
-                            break;
-                        case 4:
-                            x = keySize * cell - sideFontSize * 0.5;
-                            y = keySize * (row - 1 + 0.5) + sideFontSize * baseLine;
-                            break;
-                        case 5:
-                            x = keySize * cell - sideFontSize * 0.5;
-                            y = keySize * row - sideFontSize * baseLine;
-                            break;
-                        case 6:
-                            x = keySize * (cell - 1 + 0.5);
-                            y = keySize * row - sideFontSize * baseLine;
-                            break;
-                        case 7:
-                            x = keySize * (cell - 1) + sideFontSize * 0.5;
-                            y = keySize * row - sideFontSize * baseLine;
-                            break;
-                        case 8:
-                            x = keySize * (cell - 1) + sideFontSize * 0.5;
-                            y = keySize * (row - 1 + 0.5) + sideFontSize * baseLine;
-                            break;
-                        case 9:
-                            // 中间那个字
-                            paint.setColor(Color.WHITE);
-                            paint.setTextSize(centerFontSize);
-                            // 半个键
-                            x = keySize * (cell - 1 + 0.5);
-                            // 向下移半个字高的4/10
-                            y = keySize * (row - 1 + 0.5) + centerFontSize * baseLine;
-                            break;
-                    }
-                    // x在笔刷初始时已经设定成中心为0点;
-                    canvas.drawText("" + keyChar, (float) x, (float) y + 3, paint);
-                }
+                      // 半个键
+                      keySize * (cell - 1 + 0.5),
+                      // 向下移半个字高的4/10
+                      keySize * (row - 1 + 0.5) + keyCenterSize * baseLine,
+                      canvas, paint);
+                paint.setTextSize(keySideSize);
+                paint.setColor(Color.rgb(230, 230, 230));
+
+
+                _draw(row, cell, KEY_LEFT_TOP_INDEX,
+                      // x右移半个字
+                      keySize * (cell - 1) + keySideSize * 0.5,
+                      // y，中心点下移半个字高
+                      keySize * (row - 1) + keySideSize * (0.5 + baseLine)
+                      , canvas, paint);
+
+                _draw(row, cell, KEY_TOP_INDEX,
+                      keySize * (cell - 1 + 0.5),
+                      // y，中心点下移半个字高
+                      keySize * (row - 1) + keySideSize * (0.5 + baseLine),
+                      canvas, paint);
+
+                _draw(row, cell, KEY_RIGHT_TOP_INDEX,
+                      keySize * cell - keySideSize * 0.5,
+                      // y，中心点下移半个字高
+                      keySize * (row - 1) + keySideSize * (0.5 + baseLine),
+                      canvas, paint);
+
+
+                _draw(row, cell, KEY_RIGHT_INDEX,
+                      keySize * cell - keySideSize * 0.5,
+                      keySize * (row - 1 + 0.5) + keySideSize * baseLine,
+                      canvas, paint);
+
+                _draw(row, cell, KEY_RIGHT_BOTTOM_INDEX,
+                      keySize * cell - keySideSize * 0.5,
+                      keySize * row - keySideSize * baseLine,
+                      canvas, paint);
+
+
+                _draw(row, cell, KEY_BOTTOM_INDEX,
+                      keySize * (cell - 1 + 0.5),
+                      keySize * row - keySideSize * baseLine,
+                      canvas, paint);
+
+                _draw(row, cell, KEY_LEFT_BOTTOM_INDEX,
+                      keySize * (cell - 1) + keySideSize * 0.5,
+                      keySize * row - keySideSize * baseLine,
+                      canvas, paint);
+
+
+                _draw(row, cell, KEY_LEFT_INDEX,
+                      keySize * (cell - 1) + keySideSize * 0.5,
+                      keySize * (row - 1 + 0.5) + keySideSize * baseLine,
+                      canvas, paint);
+
+
+
+
             }
         }
 
         paint = null;// 释放
     }
 
+    private void _draw(int row, int cell, int num, double x, double y, Canvas canvas, Paint paint)
+    {
+        String keySymbol = keySymbols[row - 1][cell - 1][num][KEY_SYMBOL];
+        canvas.drawText(null == keySymbol ? "\0" : keySymbol, (float)x, (float)y + 3, paint);
+    }
     /**
      * 计算键位上边与中心字大小
      * 一般字体都是高比宽大，所以，只需要考虑高度合适即可
      */
-    private void _getFontSize() {
+    private void _getFontSize()
+    {
         //目前不清楚机制，如果已经设置了，就没有必要再重新计算
-        if (centerFontSize > 0) {
+        if (keyCenterSize > 0)
+        {
             return;
         }
 
@@ -364,13 +469,15 @@ public class MyActivity extends Activity {
         int height = 0;
 
         // 先计算中间字高度
-        for (int size = 1; fontHeight > height; size++) {
+        for (int size = 1; fontHeight > height; size++)
+        {
             // 不停的调整size，计算单字高度
             p.setTextSize(size);
             p.getTextBounds(s, 0, s.length(), bounds);
             int tmp = bounds.height();
 
-            if (tmp > fontHeight) {
+            if (tmp > fontHeight)
+            {
                 // 已经超出了，就取前面的值
                 break;
             }
@@ -378,20 +485,22 @@ public class MyActivity extends Activity {
             height = tmp;
         }
 
-        centerFontSize = height;
+        keyCenterSize = height;
         // 重设
         height = 0;
         fontHeight = (int) Math.round(keySize * (1 - bigHeight) / 2);
 
 
         // 先计算边上字高度
-        for (int size = 1; fontHeight > height; size++) {
+        for (int size = 1; fontHeight > height; size++)
+        {
             // 不停的调整size，计算单字高度
             p.setTextSize(size);
             p.getTextBounds(s, 0, s.length(), bounds);
             int tmp = bounds.height();
 
-            if (tmp > fontHeight) {
+            if (tmp > fontHeight)
+            {
                 // 已经超出了，就取前面的值
                 break;
             }
@@ -399,7 +508,7 @@ public class MyActivity extends Activity {
             height = tmp;
         }
 
-        sideFontSize = height;
+        keySideSize = height;
         p = null;
     }
 }
